@@ -40,9 +40,10 @@
     const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
     function trackBottom(){return H-(H<650?158:190)}
     function smooth(a,b,v){let u=clamp((v-a)/(b-a),0,1);return u*u*(3-2*u)}
-    function curve(s){let u=((s%5200)+5200)%5200;if(u<900)return 0;if(u<1500)return .8*smooth(900,1500,u);if(u<2300)return .8;if(u<3000)return .8-1.6*smooth(2300,3000,u);if(u<3800)return-.8;if(u<4400)return-.8+.8*smooth(3800,4400,u);return 0}
+    function baseCurve(s){return Math.tanh(Math.sin(s*.0016)*.75+Math.sin(s*.00053)*.35+Math.sin(s*.0031)*.10)}
+    function curve(s){let v=baseCurve(s);for(const center of[0,3000,7000,10000]){let d=Math.abs(s-center),w=d<=150?1:d<350?1-smooth(150,350,d):0;if(w)v=v*(1-w)+baseCurve(center)*w}return v}
     function widthAt(){return 1}
-    function point(z){let tb=trackBottom(),s=dist*1000+z*3.5,p=clamp(z/tb,0,1),yy=tb-z;return {y:yy,cx:W/2+curve(s)*W*.32,road:W*.19,p:.55+.45*p,s}}
+    function point(z){let tb=trackBottom(),s=dist*1000+z*3.5,p=clamp(z/tb,0,1),yy=tb-z;return {y:yy,cx:W/2+curve(s)*W*.32,road:W*.095,p:.55+.45*p,s}}
     function input(e){if(!running)return;let q=e.touches?e.touches[0]:e;target=clamp((q.clientX/W-.5)*2,-1,1)}
     addEventListener('pointerdown',input);addEventListener('pointermove',e=>{if(e.buttons)input(e)});addEventListener('touchstart',input,{passive:false});addEventListener('touchmove',e=>{e.preventDefault();input(e)},{passive:false});
     const pad=document.querySelector('#pad'),knob=document.querySelector('#knob');
