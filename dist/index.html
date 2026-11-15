@@ -11,6 +11,7 @@
     .top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.brand{font-size:11px;font-weight:900;letter-spacing:.22em;color:#d4ff3f;text-shadow:0 2px 10px #000}.counter{text-align:right}.distance{font-size:28px;font-weight:900;line-height:.9}.unit{font-size:10px;letter-spacing:.14em;color:#b4c0b9}.progress{height:3px;background:#ffffff28;margin-top:9px;width:122px}.progress i{display:block;height:100%;width:0;background:#d4ff3f;box-shadow:0 0 8px #d4ff3f}
     .bottom{display:flex;align-items:flex-end;justify-content:space-between}.speed strong{font-size:46px;line-height:.8;font-style:italic}.speed span{display:block;font-size:10px;letter-spacing:.18em;margin-top:8px;color:#c7d0ca}.place{font-weight:900;font-size:13px;letter-spacing:.12em;border:1px solid #ffffff33;background:#06100ccc;padding:9px 12px;border-radius:99px}.place b{color:#d4ff3f}
     .message{position:fixed;inset:0;display:grid;place-items:center;background:linear-gradient(#03100b66,#03100bdd);transition:.35s;z-index:3}.card{text-align:center;padding:28px;max-width:420px}.eyebrow{font-size:11px;letter-spacing:.28em;font-weight:900;color:#d4ff3f}.card h1{font-size:clamp(42px,13vw,78px);font-weight:1000;letter-spacing:-.075em;line-height:.82;margin:16px 0 20px;font-style:italic}.card h1 em{color:#d4ff3f;font-style:normal}.card p{font-size:14px;line-height:1.7;color:#d5ddd8;margin:0 auto 22px;max-width:340px}.start{pointer-events:auto;border:0;border-radius:99px;background:#d4ff3f;color:#10200f;padding:15px 30px;font:900 13px/1 inherit;letter-spacing:.16em;box-shadow:0 0 30px #bfff3850}.hint{display:block;margin-top:16px;font-size:10px;color:#8da096;letter-spacing:.1em}.hidden{opacity:0;pointer-events:none}.callout{position:fixed;top:22%;left:50%;transform:translate(-50%,-10px);opacity:0;font-weight:1000;font-style:italic;font-size:30px;letter-spacing:-.03em;text-shadow:0 4px 20px #000;transition:.2s;pointer-events:none}.callout.show{opacity:1;transform:translate(-50%,0)}
+    .steering{position:fixed;inset:0;z-index:2;pointer-events:none}.steer{position:absolute;top:68%;width:82px;height:82px;border-radius:50%;border:1px solid #ffffff55;background:#07150fb8;color:#fff;display:grid;place-items:center;pointer-events:auto;touch-action:none;backdrop-filter:blur(6px);box-shadow:inset 0 0 0 5px #ffffff0b,0 8px 28px #0007;transition:transform .08s,background .08s,border-color .08s}.steer.left{left:16px}.steer.right{right:16px}.steer span{font-size:38px;line-height:1;transform:translateY(-2px)}.steer small{position:absolute;bottom:9px;font-size:8px;font-weight:900;letter-spacing:.12em;color:#d4ff3f}.steer.active{transform:scale(.92);background:#d4ff3fdc;border-color:#d4ff3f;color:#0b1d10}.steer.active small{color:#0b1d10}@media(max-height:600px){.steer{top:61%;width:68px;height:68px}.steer span{font-size:30px}.steer small{display:none}}
   </style>
 </head>
 <body>
@@ -18,6 +19,10 @@
   <div class="hud">
     <div class="top"><div class="brand">WINDING 10K<br>FOREST DUEL</div><div class="counter"><div class="distance"><span id="km">0.00</span><small> / 10</small></div><div class="unit">KILOMETERS</div><div class="progress"><i id="bar"></i></div></div></div>
     <div class="bottom"><div class="speed"><strong id="speed">0</strong><span>KM/H</span></div><div class="place"><b id="place">2ND</b> POSITION</div></div>
+  </div>
+  <div class="steering" aria-label="ステアリング操作">
+    <button id="left" class="steer left" aria-label="左へ曲がる"><span>‹</span><small>LEFT</small></button>
+    <button id="right" class="steer right" aria-label="右へ曲がる"><span>›</span><small>RIGHT</small></button>
   </div>
   <div id="message" class="message"><div class="card"><div class="eyebrow">ONE FINGER. TEN KILOMETERS.</div><h1>FOREST<br><em>DUEL</em></h1><p>指を左右に動かしてステアリング。狭くうねる道で、先行するライバルを追い抜け。</p><button id="start" class="start">START RACE</button><span class="hint">画面をタッチしたまま左右へ</span></div></div>
   <div id="callout" class="callout">1 KM</div>
@@ -33,6 +38,8 @@
     function point(z){let s=dist*1000+z*3.5, p=z/H, horizon=H*.08, yy=H-(z), perspective=.32+.68*Math.pow(p,.72); return {y:yy,cx:W/2+curve(s)*W*.38*perspective,road:W*widthAt(s)*.48*perspective,p:perspective,s};}
     function input(e){if(!running)return;let q=e.touches?e.touches[0]:e;target=clamp((q.clientX/W-.5)*2,-1,1)}
     addEventListener('pointerdown',input);addEventListener('pointermove',e=>{if(e.buttons)input(e)});addEventListener('touchstart',input,{passive:false});addEventListener('touchmove',e=>{e.preventDefault();input(e)},{passive:false});
+    function bindSteer(id,value){const b=document.querySelector(id);const press=e=>{e.preventDefault();e.stopPropagation();if(!running)return;target=value;b.classList.add('active');b.setPointerCapture?.(e.pointerId)};const release=e=>{e.preventDefault();e.stopPropagation();target=0;b.classList.remove('active')};b.addEventListener('pointerdown',press);b.addEventListener('pointerup',release);b.addEventListener('pointercancel',release);b.addEventListener('lostpointercapture',release)}
+    bindSteer('#left',-1);bindSteer('#right',1);
     function spark(px,py,n=8){for(let i=0;i<n;i++)particles.push({x:px,y:py,vx:(Math.random()-.5)*170,vy:-Math.random()*130-30,life:.25+Math.random()*.35})}
     function reset(){t=dist=0;speed=0;nextSign=1;target=0;player={lane:0,vx:0,spin:0,wobble:0};rival={lane:-.18,vx:0,lead:42,speed:168,wobble:0};particles=[];running=true;msg.classList.add('hidden')}
     document.querySelector('#start').onclick=reset;
